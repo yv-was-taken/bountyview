@@ -40,7 +40,8 @@ export const createBountyInputSchema = z.object({
 
 export const claimWinnerInputSchema = z.object({
   submissionId: z.string().uuid(),
-  winnerAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/)
+  winnerAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  txHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/)
 });
 
 export const submitBountyInputSchema = z.object({

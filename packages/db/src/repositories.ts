@@ -115,6 +115,9 @@ export async function listEmployerSubmissions(employerId: string, bountyId: stri
       customDeliverables: submissions.customDeliverables,
       submittedAt: submissions.submittedAt,
       isWinner: submissions.isWinner,
+      reviewStatus: submissions.reviewStatus,
+      rejectionReason: submissions.rejectionReason,
+      reviewedAt: submissions.reviewedAt,
       candidateGithubUsername: users.githubUsername,
       candidateAvatarUrl: users.avatarUrl
     })

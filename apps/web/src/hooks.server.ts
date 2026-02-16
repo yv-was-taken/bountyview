@@ -19,6 +19,30 @@ function isAuthenticatedOnlyPath(pathname: string): boolean {
   return pathname.startsWith('/dashboard') || pathname.startsWith('/wallet');
 }
 
+function isTermsBypassPath(pathname: string): boolean {
+  if (pathname.startsWith('/terms')) {
+    return true;
+  }
+
+  if (pathname === '/login' || pathname === '/signout') {
+    return true;
+  }
+
+  if (pathname.startsWith('/auth')) {
+    return true;
+  }
+
+  if (pathname.startsWith('/api/session/terms/accept')) {
+    return true;
+  }
+
+  if (pathname.startsWith('/api/session')) {
+    return true;
+  }
+
+  return false;
+}
+
 export const handle: Handle = async ({ event, resolve }) => {
   return authHandle({
     event,
@@ -30,9 +54,16 @@ export const handle: Handle = async ({ event, resolve }) => {
             githubId: Number(session.user.githubId),
             githubUsername: session.user.githubUsername,
             role: session.user.role,
-            companyId: session.user.companyId
+            companyId: session.user.companyId,
+            termsAcceptedAt: session.user.termsAcceptedAt ?? null
           }
         : null;
+
+      if (authEvent.locals.currentUser && !isTermsBypassPath(authEvent.url.pathname)) {
+        if (!authEvent.locals.currentUser.termsAcceptedAt) {
+          throw redirect(303, '/terms');
+        }
+      }
 
       if (isAuthenticatedOnlyPath(authEvent.url.pathname) && !authEvent.locals.currentUser) {
         throw redirect(303, '/login');

@@ -4,11 +4,13 @@
   async function chooseWinner(submissionId: string) {
     const winnerAddress = prompt('Enter winner wallet address (0x...)');
     if (!winnerAddress) return;
+    const txHash = prompt('Enter on-chain claim transaction hash (0x...)');
+    if (!txHash) return;
 
     const res = await fetch(`/api/bounties/${data.bountyId}/claim-winner`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ submissionId, winnerAddress })
+      body: JSON.stringify({ submissionId, winnerAddress, txHash })
     });
 
     const body = await res.json();
@@ -31,6 +33,10 @@
           <a href={submission.githubPrUrl} target="_blank" rel="noreferrer">Pull Request</a>
         </p>
         <p>Submitted: {new Date(submission.submittedAt).toLocaleString()}</p>
+        <p>Status: {submission.reviewStatus}</p>
+        {#if submission.reviewStatus === 'rejected' && submission.rejectionReason}
+          <p>Reason: {submission.rejectionReason}</p>
+        {/if}
         {#if submission.isWinner}
           <strong>Winner</strong>
         {:else}

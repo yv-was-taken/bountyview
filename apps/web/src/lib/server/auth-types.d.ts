@@ -8,6 +8,7 @@ declare module '@auth/sveltekit' {
       githubId: string;
       githubUsername: string;
       companyId: string | null;
+      termsAcceptedAt: string | null;
       name?: string | null;
       email?: string | null;
       image?: string | null;
@@ -22,5 +23,6 @@ declare module '@auth/core/jwt' {
     githubId?: string;
     githubUsername?: string;
     companyId?: string | null;
+    termsAcceptedAt?: string | null;
   }
 }

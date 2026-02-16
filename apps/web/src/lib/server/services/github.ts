@@ -26,6 +26,14 @@ function candidateBranchName(githubUsername: string, candidateId: string) {
   return `candidate/${githubUsername}-${candidateId.slice(0, 8)}`;
 }
 
+function sanitizeRepoPart(input: string) {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 export async function ensureBountyRepo(params: {
   bountyId: string;
   employerGithubUsername: string;
@@ -41,7 +49,8 @@ export async function ensureBountyRepo(params: {
 
   const env = getEnv();
   const octokit = await getInstallationClient();
-  const repoName = `bounty-${params.bountyId.slice(0, 8)}`;
+  const employerSlug = sanitizeRepoPart(params.employerGithubUsername) || 'employer';
+  const repoName = `${employerSlug}-bounty-${params.bountyId.slice(0, 8)}`;
 
   let createdRepo: { full_name: string; html_url: string };
 
@@ -202,8 +211,13 @@ export async function getPullRequestArtifacts(prUrl: string) {
   return {
     title: prResponse.data.title,
     body: prResponse.data.body,
+    prAuthorLogin: prResponse.data.user?.login ?? null,
     state: prResponse.data.state,
     merged: prResponse.data.merged,
+    headRef: prResponse.data.head.ref,
+    headRepoFullName: prResponse.data.head.repo?.full_name ?? null,
+    headUserLogin: prResponse.data.head.user?.login ?? null,
+    baseRepoFullName: prResponse.data.base.repo?.full_name ?? null,
     commits: commitResponse.data.map((commit) => ({
       sha: commit.sha,
       message: commit.commit.message,

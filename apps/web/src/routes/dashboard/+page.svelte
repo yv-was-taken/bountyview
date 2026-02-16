@@ -44,26 +44,50 @@
 
   async function markFunded(bountyId: string) {
     const txHash = prompt('Enter Base transaction hash for createBounty funding');
-    const onchainBountyId = prompt('Enter on-chain bounty ID');
-
-    if (!txHash || !onchainBountyId) return;
+    if (!txHash) return;
 
     const res = await fetch(`/api/bounties/${bountyId}/fund`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ txHash, onchainBountyId })
+      body: JSON.stringify({ txHash })
     });
 
     const body = await res.json();
     alert(res.ok ? 'Funding recorded.' : body.error ?? 'Funding update failed');
   }
 
-  async function cancelBounty(bountyId: string) {
-    const txHash = prompt('Optional withdraw transaction hash');
-    const res = await fetch(`/api/bounties/${bountyId}/withdraw`, {
+  async function cancelBounty(bounty: { id: string; onchainBountyId?: string | null }) {
+    const submissionsRes = await fetch(`/api/bounties/${bounty.id}/submissions`);
+    const submissionsBody = await submissionsRes.json();
+    if (!submissionsRes.ok) {
+      alert(submissionsBody.error ?? 'Unable to load submissions for cancellation');
+      return;
+    }
+
+    const submissions: Array<{ id: string }> = submissionsBody.submissions ?? [];
+    const rejections: Array<{ submissionId: string; reason: string }> = [];
+
+    if (submissions.length > 0) {
+      const reason = prompt(
+        `Cancellation requires explicit rejection of all ${submissions.length} submissions. Enter a rejection reason to apply now:`
+      );
+      if (!reason) return;
+
+      for (const submission of submissions) {
+        rejections.push({ submissionId: submission.id, reason });
+      }
+    }
+
+    let txHash: string | undefined;
+    if (bounty.onchainBountyId) {
+      txHash = prompt('Enter on-chain cancel/withdraw transaction hash (required)');
+      if (!txHash) return;
+    }
+
+    const res = await fetch(`/api/bounties/${bounty.id}/withdraw`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ txHash: txHash || undefined })
+      body: JSON.stringify({ txHash, rejections })
     });
 
     const body = await res.json();
@@ -90,7 +114,7 @@
               ({bounty.status})
               - <a href={`/bounties/${bounty.id}/submissions`}>Review submissions</a>
               <button class="secondary" on:click={() => markFunded(bounty.id)}>Link Funding</button>
-              <button class="secondary" on:click={() => cancelBounty(bounty.id)}>Cancel</button>
+              <button class="secondary" on:click={() => cancelBounty(bounty)}>Cancel</button>
             </li>
           {/each}
         </ul>
@@ -137,7 +161,11 @@
             <li>
               <strong>{submission.bountyTitle}</strong>
               - <a href={submission.githubPrUrl} target="_blank" rel="noreferrer">PR</a>
+              · {submission.reviewStatus}
               {#if submission.isWinner} · Winner{/if}
+              {#if submission.reviewStatus === 'rejected' && submission.rejectionReason}
+                · Rejected: {submission.rejectionReason}
+              {/if}
             </li>
           {/each}
         </ul>

@@ -43,6 +43,8 @@ export const load: PageServerLoad = async (event) => {
       githubPrUrl: submissions.githubPrUrl,
       submittedAt: submissions.submittedAt,
       isWinner: submissions.isWinner,
+      reviewStatus: submissions.reviewStatus,
+      rejectionReason: submissions.rejectionReason,
       bountyTitle: bounties.jobTitle
     })
     .from(submissions)

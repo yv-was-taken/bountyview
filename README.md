@@ -13,15 +13,43 @@ BountyView is a bounty-based technical interview platform where employers fund r
 ## Quick Start
 
 1. Install dependencies:
-   - `npm install`
+   - `bun install`
 2. Copy environment file:
    - `cp .env.example .env`
 3. Run migrations (after setting `DATABASE_URL`):
-   - `npm run db:migrate --workspace @bountyview/db`
+   - `bun run db:migrate`
 4. Start web app:
-   - `npm run dev`
+   - `bun run dev`
 5. Start worker:
-   - `npm run dev:worker`
+   - `bun run dev:worker`
+
+## Production Migrations
+
+Migrations are SQL files in `packages/db/drizzle/` and are applied with Drizzle (`drizzle-kit migrate`) via:
+
+- `bun run db:migrate`
+
+Recommended production flow (Railway or similar):
+
+1. Deploy build artifact/container.
+2. Run a one-off release command or migration job:
+   - `bun run db:migrate`
+3. Only after migrations succeed, promote/restart `web` and `worker`.
+
+Operational notes:
+
+- Migrations are tracked in Postgres (`__drizzle_migrations`), so reruns are idempotent.
+- Keep migrations backward compatible for rolling deploys (add columns first, remove old paths later).
+- For this patch, ensure `packages/db/drizzle/0001_hardening.sql` is applied before new web/worker code serves traffic.
+
+Railway automation options:
+
+1. Preferred: configure a release/predeploy command:
+   - `bun run db:migrate`
+2. Startup fallback (already wired in scripts):
+   - Web service start command: `bun run start:web`
+   - Worker service start command: `bun run start:worker`
+   - Set `RUN_DB_MIGRATIONS_ON_STARTUP=true` only for one service to avoid concurrent migration runners.
 
 ## Product Notes
 

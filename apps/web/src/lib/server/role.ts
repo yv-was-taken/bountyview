@@ -16,3 +16,21 @@ export async function setUserRole(userId: string, role: 'employer' | 'candidate'
 
   return updated[0] ?? null;
 }
+
+export async function acceptTerms(userId: string, version: string) {
+  const updated = await db
+    .update(users)
+    .set({
+      termsAcceptedAt: new Date(),
+      termsVersion: version,
+      updatedAt: new Date()
+    })
+    .where(eq(users.id, userId))
+    .returning({
+      id: users.id,
+      termsAcceptedAt: users.termsAcceptedAt,
+      termsVersion: users.termsVersion
+    });
+
+  return updated[0] ?? null;
+}

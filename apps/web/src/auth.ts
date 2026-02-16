@@ -53,6 +53,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
           token.githubId = dbUser.githubId;
           token.githubUsername = dbUser.githubUsername;
           token.companyId = dbUser.companyId;
+          token.termsAcceptedAt = dbUser.termsAcceptedAt?.toISOString() ?? null;
         }
       }
 
@@ -65,7 +66,8 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
           role: 'candidate',
           githubId: '',
           githubUsername: '',
-          companyId: null
+          companyId: null,
+          termsAcceptedAt: null
         };
       }
 
@@ -74,6 +76,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
       session.user.githubId = typeof token.githubId === 'string' ? token.githubId : '';
       session.user.githubUsername = typeof token.githubUsername === 'string' ? token.githubUsername : '';
       session.user.companyId = typeof token.companyId === 'string' ? token.companyId : null;
+      session.user.termsAcceptedAt = typeof token.termsAcceptedAt === 'string' ? token.termsAcceptedAt : null;
 
       if (!session.user.id || !session.user.githubId) {
         const fallback = await db.query.users.findFirst({
@@ -89,6 +92,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
           session.user.githubId = fallback.githubId;
           session.user.githubUsername = fallback.githubUsername;
           session.user.companyId = fallback.companyId;
+          session.user.termsAcceptedAt = fallback.termsAcceptedAt?.toISOString() ?? null;
         }
       }
 

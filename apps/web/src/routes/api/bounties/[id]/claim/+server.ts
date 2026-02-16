@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import { json } from '@sveltejs/kit';
-import { bounties, db, users } from '@bountyview/db';
+import { bounties, bountyFunding, db, users } from '@bountyview/db';
 import { requireRole } from '$lib/server/auth-guard';
 import { conflict, forbidden, notFound, serverError } from '$lib/server/http';
 import { ensureBountyRepo, grantCandidateRepoAccess } from '$lib/server/services/github';
@@ -16,6 +16,22 @@ export async function POST(event) {
 
   if (bounty.status !== 'open') {
     return conflict('Bounty is not open');
+  }
+
+  const now = new Date();
+  if (now > bounty.submissionDeadline) {
+    return conflict('Submission deadline has passed');
+  }
+
+  if (!bounty.onchainBountyId) {
+    return conflict('Bounty funding is not confirmed on-chain');
+  }
+
+  const fundingRecord = await db.query.bountyFunding.findFirst({
+    where: eq(bountyFunding.bountyId, bounty.id)
+  });
+  if (!fundingRecord) {
+    return conflict('Bounty funding is not confirmed on-chain');
   }
 
   const blocked = await isCandidateBlocked(bounty.employerId, candidate.id);

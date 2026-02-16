@@ -2,17 +2,24 @@
   "name": "bountyview",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "bun@1.3.5",
   "workspaces": [
     "apps/*",
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "dev": "npm run dev --workspace @bountyview/web",
-    "dev:worker": "npm run dev --workspace @bountyview/worker",
-    "check": "npm run check --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present"
+    "build": "bun run --workspaces --if-present build",
+    "build:web": "bun run --filter @bountyview/web build",
+    "build:worker": "bun run --filter @bountyview/worker build",
+    "dev": "bun run --filter @bountyview/web dev",
+    "dev:worker": "bun run --filter @bountyview/worker dev",
+    "start:web": "./scripts/start-web.sh",
+    "start:worker": "./scripts/start-worker.sh",
+    "db:generate": "bun run --filter @bountyview/db db:generate",
+    "db:migrate": "bun run --filter @bountyview/db db:migrate",
+    "check": "bun run --workspaces --if-present check",
+    "test": "bun run --workspaces --if-present test",
+    "lint": "bun run --workspaces --if-present lint"
   },
   "engines": {
     "node": ">=20.0.0"

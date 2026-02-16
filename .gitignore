@@ -3,6 +3,8 @@ node_modules
 .env.*
 !.env.example
 .DS_Store
+.bun/
+.bun-tmp/
 .svelte-kit
 dist
 build

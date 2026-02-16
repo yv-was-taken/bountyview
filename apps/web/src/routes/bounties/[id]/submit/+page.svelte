@@ -30,6 +30,9 @@
 <section class="card">
   <h1>Submit Solution</h1>
   <p><strong>{data.bounty.jobTitle}</strong> · {data.bounty.companyName}</p>
+  <p style="color: var(--muted);">
+    Submission must reference the assigned BountyView repository and your designated candidate branch.
+  </p>
 
   <form class="grid" style="gap: 1rem;" on:submit={submitSolution}>
     <label>

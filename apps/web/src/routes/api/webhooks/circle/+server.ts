@@ -13,7 +13,8 @@ function normalizeStatus(status: string): 'pending' | 'processing' | 'completed'
 }
 
 export async function POST(event) {
-  const signature = event.request.headers.get('circle-signature');
+  const signature =
+    event.request.headers.get('x-circle-signature') ?? event.request.headers.get('circle-signature');
   const rawBody = await event.request.text();
 
   if (!verifyCircleWebhookSignature(signature, rawBody)) {

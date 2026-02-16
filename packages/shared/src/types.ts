@@ -30,6 +30,7 @@ export interface AuthUser {
   githubUsername: string;
   role: UserRole;
   companyId: string | null;
+  termsAcceptedAt: string | null;
 }
 
 export interface BountyFilters {

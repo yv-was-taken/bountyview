@@ -33,6 +33,8 @@ export const users = pgTable(
     role: text('role').notNull(),
     companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
     privyWalletAddress: varchar('privy_wallet_address', { length: 42 }),
+    termsAcceptedAt: timestamp('terms_accepted_at', { withTimezone: true }),
+    termsVersion: text('terms_version'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
   },
@@ -100,10 +102,15 @@ export const submissions = pgTable(
     customDeliverables: jsonb('custom_deliverables'),
     submittedAt: timestamp('submitted_at', { withTimezone: true }).defaultNow().notNull(),
     isWinner: boolean('is_winner').notNull().default(false),
+    reviewStatus: text('review_status').notNull().default('pending'),
+    rejectionReason: text('rejection_reason'),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull()
   },
   (table) => [
+    check('submissions_review_status_check', sql`${table.reviewStatus} in ('pending', 'rejected', 'winner')`),
+    check('submissions_winner_consistency_check', sql`(${table.reviewStatus} = 'winner') = ${table.isWinner}`),
     unique('submissions_bounty_candidate_unique').on(table.bountyId, table.candidateId),
     index('submissions_bounty_idx').on(table.bountyId),
     index('submissions_candidate_idx').on(table.candidateId)
@@ -126,15 +133,19 @@ export const employerBlocks = pgTable(
   ]
 );
 
-export const bountyFunding = pgTable('bounty_funding', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  bountyId: uuid('bounty_id').notNull().references(() => bounties.id, { onDelete: 'cascade' }).unique(),
-  txHash: varchar('tx_hash', { length: 66 }).notNull().unique(),
-  chainId: integer('chain_id').notNull(),
-  escrowAmount: numeric('escrow_amount', { precision: 18, scale: 6 }).notNull(),
-  fundedAt: timestamp('funded_at', { withTimezone: true }).defaultNow().notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
-});
+export const bountyFunding = pgTable(
+  'bounty_funding',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    bountyId: uuid('bounty_id').notNull().references(() => bounties.id, { onDelete: 'cascade' }).unique(),
+    txHash: varchar('tx_hash', { length: 66 }).notNull().unique(),
+    chainId: integer('chain_id').notNull(),
+    escrowAmount: numeric('escrow_amount', { precision: 18, scale: 6 }).notNull(),
+    fundedAt: timestamp('funded_at', { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => [check('bounty_funding_tx_hash_lower_check', sql`${table.txHash} = lower(${table.txHash})`)]
+);
 
 export const escrowEvents = pgTable(
   'escrow_events',
