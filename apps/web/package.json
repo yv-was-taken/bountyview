@@ -1,0 +1,33 @@
+{
+  "name": "@bountyview/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
+  },
+  "dependencies": {
+    "@auth/sveltekit": "^1.8.0",
+    "@bountyview/db": "0.1.0",
+    "@bountyview/shared": "0.1.0",
+    "@octokit/app": "^16.0.0",
+    "@octokit/core": "^6.1.4",
+    "@sveltejs/adapter-node": "^5.2.10",
+    "@sveltejs/kit": "^2.11.0",
+    "drizzle-orm": "^0.39.1",
+    "pg-boss": "^9.0.3",
+    "svelte": "^5.0.0",
+    "viem": "^2.21.50",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "^5.0.3",
+    "@types/node": "^22.10.2",
+    "svelte-check": "^4.1.1",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.5"
+  }
+}

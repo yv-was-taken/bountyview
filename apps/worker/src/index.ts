@@ -1,0 +1,46 @@
+import { QUEUE_NAMES } from '@bountyview/shared';
+import { createWorkerQueue } from './services/queue';
+import { syncEscrowEvents } from './jobs/syncEscrowEvents';
+import { reconcileBountyState } from './jobs/reconcileBountyState';
+import { revokeGithubAccess } from './jobs/revokeGithubAccess';
+import { pollCircleWithdraw } from './jobs/pollCircleWithdraw';
+import { retryFailedIntegrations } from './jobs/retryFailedIntegrations';
+import { provisionGithubRepo } from './jobs/provisionGithubRepo';
+
+async function main() {
+  const queue = await createWorkerQueue();
+
+  await queue.work(QUEUE_NAMES.syncEscrowEvents, async ([job]) => {
+    await syncEscrowEvents(job.data);
+  });
+
+  await queue.work(QUEUE_NAMES.reconcileBountyState, async ([job]) => {
+    await reconcileBountyState(job.data);
+  });
+
+  await queue.work(QUEUE_NAMES.githubAccessRevoke, async ([job]) => {
+    await revokeGithubAccess(job.data);
+  });
+
+  await queue.work(QUEUE_NAMES.githubRepoProvision, async ([job]) => {
+    await provisionGithubRepo(job.data);
+  });
+
+  await queue.work(QUEUE_NAMES.circleWithdrawStatusPoll, async ([job]) => {
+    await pollCircleWithdraw(job.data);
+  });
+
+  await queue.work(QUEUE_NAMES.retryFailedIntegrations, async ([job]) => {
+    await retryFailedIntegrations(job.data);
+  });
+
+  await queue.schedule(QUEUE_NAMES.syncEscrowEvents, '*/2 * * * *', { trigger: 'cron' });
+  await queue.schedule(QUEUE_NAMES.reconcileBountyState, '*/15 * * * *', { trigger: 'cron' });
+
+  console.info('BountyView worker started');
+}
+
+main().catch((err) => {
+  console.error('Worker crashed', err);
+  process.exit(1);
+});
