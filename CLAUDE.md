@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A bounty-based technical interview platform where employers fund real interview tasks (escrowed on-chain via Base) and candidates submit production-like solutions. Two user roles: `employer` and `candidate`.
 
+## Package Manager
+
+This project uses **bun** exclusively. Always use `bun` and `bunx` -- never `npm`, `npx`, `pnpm`, or `pnpx`.
+
 ## Commands
 
 ```bash
