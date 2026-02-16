@@ -105,11 +105,11 @@
 
     <article class="card">
       <h2>Your Bounties</h2>
-      {#if data.ownBounties.length === 0}
+      {#if (data.ownBounties ?? []).length === 0}
         <p>No bounties yet.</p>
       {:else}
         <ul>
-          {#each data.ownBounties as bounty}
+          {#each data.ownBounties ?? [] as bounty}
             <li>
               <a href={`/bounties/${bounty.id}`}>{bounty.jobTitle}</a>
               ({bounty.status})
@@ -131,11 +131,11 @@
       </form>
 
       <h3>Blocked Candidates</h3>
-      {#if data.blockedCandidates.length === 0}
+      {#if (data.blockedCandidates ?? []).length === 0}
         <p>None</p>
       {:else}
         <ul>
-          {#each data.blockedCandidates as block}
+          {#each data.blockedCandidates ?? [] as block}
             <li>
               {block.githubUsername} ({block.candidateId}) - {block.reason}
               <button class="secondary" on:click={() => unblockCandidate(block.candidateId)}>Unblock</button>
@@ -154,11 +154,11 @@
 
     <article class="card">
       <h2>Your Submissions</h2>
-      {#if data.mySubmissions.length === 0}
+      {#if (data.mySubmissions ?? []).length === 0}
         <p>No submissions yet.</p>
       {:else}
         <ul>
-          {#each data.mySubmissions as submission}
+          {#each data.mySubmissions ?? [] as submission}
             <li>
               <strong>{submission.bountyTitle}</strong>
               - <a href={submission.githubPrUrl} target="_blank" rel="noreferrer">PR</a>
@@ -175,11 +175,11 @@
 
     <article class="card">
       <h2>Your Payouts</h2>
-      {#if data.myPayouts.length === 0}
+      {#if (data.myPayouts ?? []).length === 0}
         <p>No payouts recorded.</p>
       {:else}
         <ul>
-          {#each data.myPayouts as payout}
+          {#each data.myPayouts ?? [] as payout}
             <li>{payout.amountUsdc} USDC · {payout.status} · {payout.provider}</li>
           {/each}
         </ul>

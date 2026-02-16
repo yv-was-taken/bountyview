@@ -10,28 +10,28 @@ import { provisionGithubRepo } from './jobs/provisionGithubRepo';
 async function main() {
   const queue = await createWorkerQueue();
 
-  await queue.work(QUEUE_NAMES.syncEscrowEvents, async ([job]) => {
-    await syncEscrowEvents(job.data);
+  await queue.work(QUEUE_NAMES.syncEscrowEvents, async (job) => {
+    await syncEscrowEvents(job.data as { fromBlock?: string; toBlock?: string });
   });
 
-  await queue.work(QUEUE_NAMES.reconcileBountyState, async ([job]) => {
-    await reconcileBountyState(job.data);
+  await queue.work(QUEUE_NAMES.reconcileBountyState, async (job) => {
+    await reconcileBountyState(job.data as { nowIso?: string });
   });
 
-  await queue.work(QUEUE_NAMES.githubAccessRevoke, async ([job]) => {
-    await revokeGithubAccess(job.data);
+  await queue.work(QUEUE_NAMES.githubAccessRevoke, async (job) => {
+    await revokeGithubAccess(job.data as { bountyId: string; candidateId: string; candidateGithubUsername: string });
   });
 
-  await queue.work(QUEUE_NAMES.githubRepoProvision, async ([job]) => {
-    await provisionGithubRepo(job.data);
+  await queue.work(QUEUE_NAMES.githubRepoProvision, async (job) => {
+    await provisionGithubRepo(job.data as Record<string, unknown>);
   });
 
-  await queue.work(QUEUE_NAMES.circleWithdrawStatusPoll, async ([job]) => {
-    await pollCircleWithdraw(job.data);
+  await queue.work(QUEUE_NAMES.circleWithdrawStatusPoll, async (job) => {
+    await pollCircleWithdraw(job.data as { payoutId: string; externalRef: string });
   });
 
-  await queue.work(QUEUE_NAMES.retryFailedIntegrations, async ([job]) => {
-    await retryFailedIntegrations(job.data);
+  await queue.work(QUEUE_NAMES.retryFailedIntegrations, async (job) => {
+    await retryFailedIntegrations(job.data as Record<string, unknown>);
   });
 
   await queue.schedule(QUEUE_NAMES.syncEscrowEvents, '*/2 * * * *', { trigger: 'cron' });

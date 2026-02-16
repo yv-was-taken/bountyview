@@ -73,7 +73,7 @@ export async function POST(event) {
         FOR UPDATE
       `);
 
-      const locked = (lockResult as { rows?: Array<{ id: string; status: string }> }).rows?.[0];
+      const locked = (lockResult as unknown as { rows?: Array<{ id: string; status: string }> }).rows?.[0];
       if (!locked) {
         throw new Error('NOT_FOUND');
       }

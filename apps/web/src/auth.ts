@@ -68,11 +68,11 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
           githubUsername: '',
           companyId: null,
           termsAcceptedAt: null
-        };
+        } as typeof session.user;
       }
 
       session.user.id = typeof token.userId === 'string' ? token.userId : '';
-      session.user.role = typeof token.role === 'string' ? token.role : 'candidate';
+      session.user.role = (typeof token.role === 'string' ? token.role : 'candidate') as typeof session.user.role;
       session.user.githubId = typeof token.githubId === 'string' ? token.githubId : '';
       session.user.githubUsername = typeof token.githubUsername === 'string' ? token.githubUsername : '';
       session.user.companyId = typeof token.companyId === 'string' ? token.companyId : null;
@@ -88,7 +88,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
 
         if (fallback) {
           session.user.id = fallback.id;
-          session.user.role = fallback.role;
+          session.user.role = fallback.role as typeof session.user.role;
           session.user.githubId = fallback.githubId;
           session.user.githubUsername = fallback.githubUsername;
           session.user.companyId = fallback.companyId;

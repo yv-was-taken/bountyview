@@ -21,7 +21,7 @@ export type DeliverableType = (typeof DELIVERABLE_TYPE_VALUES)[number];
 export interface DeliverableItem {
   type: DeliverableType;
   label: string;
-  description?: string;
+  description?: string | undefined;
 }
 
 export interface AuthUser {
@@ -34,10 +34,10 @@ export interface AuthUser {
 }
 
 export interface BountyFilters {
-  level?: RoleLevel;
-  minAmount?: number;
-  maxAmount?: number;
-  tags?: string[];
+  level?: RoleLevel | undefined;
+  minAmount?: number | undefined;
+  maxAmount?: number | undefined;
+  tags?: string[] | undefined;
 }
 
 export const QUEUE_NAMES = {

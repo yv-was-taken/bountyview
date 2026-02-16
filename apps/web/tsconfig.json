@@ -1,13 +1,15 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "./.svelte-kit/tsconfig.json",
   "compilerOptions": {
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
     "types": ["node"],
-    "noImplicitAny": false,
-    "paths": {
-      "$lib/*": ["./src/lib/*"],
-      "$shared": ["../../packages/shared/src/index.ts"],
-      "$shared/*": ["../../packages/shared/src/*"]
-    }
-  },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.svelte", "vite.config.ts"]
+    "noImplicitAny": false
+  }
 }

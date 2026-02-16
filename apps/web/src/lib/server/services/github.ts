@@ -60,7 +60,7 @@ export async function ensureBountyRepo(params: {
       throw new Error('Invalid template URL. Expected github.com/owner/repo');
     }
 
-    const [, owner, repo] = match;
+    const [, owner, repo] = match as RegExpMatchArray & [string, string, string];
     const response = await octokit.request('POST /repos/{template_owner}/{template_repo}/generate', {
       template_owner: owner,
       template_repo: repo,
@@ -102,7 +102,11 @@ export async function ensureBountyRepo(params: {
     })
     .returning();
 
-  return inserted[0];
+  const result = inserted[0];
+  if (!result) {
+    throw new Error('Failed to insert github repo record');
+  }
+  return result;
 }
 
 export async function grantCandidateRepoAccess(params: {
@@ -192,7 +196,7 @@ export async function getPullRequestArtifacts(prUrl: string) {
     throw new Error('Invalid GitHub PR URL');
   }
 
-  const [, owner, repo, pullNumberRaw] = match;
+  const [, owner, repo, pullNumberRaw] = match as RegExpMatchArray & [string, string, string, string];
   const pullNumber = Number(pullNumberRaw);
 
   const octokit = await getInstallationClient();

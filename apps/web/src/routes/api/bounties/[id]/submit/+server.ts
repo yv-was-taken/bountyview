@@ -101,7 +101,7 @@ export async function POST(event) {
         FOR UPDATE
       `);
 
-      const lockedBounty = (lockResult as { rows?: Array<{ id: string; employer_id: string; status: string; submission_deadline: Date }> }).rows?.[0];
+      const lockedBounty = (lockResult as unknown as { rows?: Array<{ id: string; employer_id: string; status: string; submission_deadline: Date }> }).rows?.[0];
       if (!lockedBounty) {
         throw new Error('NOT_FOUND');
       }

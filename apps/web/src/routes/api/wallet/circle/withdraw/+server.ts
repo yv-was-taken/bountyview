@@ -20,7 +20,7 @@ function normalizeStatus(status: string): 'pending' | 'processing' | 'completed'
 }
 
 function parseUsdcToUnits(amount: string): bigint {
-  const [wholePart, fractionPart = ''] = amount.split('.');
+  const [wholePart = '0', fractionPart = ''] = amount.split('.');
   const normalizedWhole = wholePart === '' ? '0' : wholePart;
   const normalizedFraction = fractionPart.padEnd(6, '0').slice(0, 6);
   return BigInt(normalizedWhole) * 1_000_000n + BigInt(normalizedFraction);
@@ -89,7 +89,7 @@ export async function POST(event) {
         WHERE candidate_id = ${candidate.id}
       `);
 
-      const totals = (totalsResult as { rows?: Array<{ earned: string; withdrawn: string }> }).rows?.[0] ?? {
+      const totals = (totalsResult as unknown as { rows?: Array<{ earned: string; withdrawn: string }> }).rows?.[0] ?? {
         earned: '0',
         withdrawn: '0'
       };
