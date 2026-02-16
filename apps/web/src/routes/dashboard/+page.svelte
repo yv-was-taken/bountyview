@@ -80,8 +80,9 @@
 
     let txHash: string | undefined;
     if (bounty.onchainBountyId) {
-      txHash = prompt('Enter on-chain cancel/withdraw transaction hash (required)');
-      if (!txHash) return;
+      const input = prompt('Enter on-chain cancel/withdraw transaction hash (required)');
+      if (!input) return;
+      txHash = input;
     }
 
     const res = await fetch(`/api/bounties/${bounty.id}/withdraw`, {
