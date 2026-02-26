@@ -23,6 +23,7 @@ declare module '@auth/core/jwt' {
     githubId?: string;
     githubUsername?: string;
     companyId?: string | null;
+    email?: string | null;
     termsAcceptedAt?: string | null;
   }
 }

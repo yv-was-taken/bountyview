@@ -35,8 +35,14 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
           githubId,
           githubUsername: username,
           avatarUrl: typeof profile?.image === 'string' ? profile.image : null,
+          email: typeof profile?.email === 'string' ? profile.email : null,
           role: 'candidate'
         });
+      } else if (profile?.email) {
+        await db
+          .update(users)
+          .set({ email: profile.email as string })
+          .where(eq(users.id, existing.id));
       }
 
       return true;
@@ -53,6 +59,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
           token.githubId = dbUser.githubId;
           token.githubUsername = dbUser.githubUsername;
           token.companyId = dbUser.companyId;
+          token.email = dbUser.email;
           token.termsAcceptedAt = dbUser.termsAcceptedAt?.toISOString() ?? null;
         }
       }
@@ -76,6 +83,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
       session.user.githubId = typeof token.githubId === 'string' ? token.githubId : '';
       session.user.githubUsername = typeof token.githubUsername === 'string' ? token.githubUsername : '';
       session.user.companyId = typeof token.companyId === 'string' ? token.companyId : null;
+      session.user.email = typeof token.email === 'string' ? token.email : null;
       session.user.termsAcceptedAt = typeof token.termsAcceptedAt === 'string' ? token.termsAcceptedAt : null;
 
       if (!session.user.id || !session.user.githubId) {
@@ -92,6 +100,7 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
           session.user.githubId = fallback.githubId;
           session.user.githubUsername = fallback.githubUsername;
           session.user.companyId = fallback.companyId;
+          session.user.email = fallback.email;
           session.user.termsAcceptedAt = fallback.termsAcceptedAt?.toISOString() ?? null;
         }
       }
