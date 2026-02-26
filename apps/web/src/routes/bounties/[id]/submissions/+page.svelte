@@ -40,7 +40,7 @@
         {#if submission.isWinner}
           <strong>Winner</strong>
         {:else}
-          <button on:click={() => chooseWinner(submission.id)}>Select Winner</button>
+          <button onclick={() => chooseWinner(submission.id)}>Select Winner</button>
         {/if}
       </article>
     {/each}

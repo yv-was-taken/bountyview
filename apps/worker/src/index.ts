@@ -6,6 +6,7 @@ import { revokeGithubAccess } from './jobs/revokeGithubAccess';
 import { pollCircleWithdraw } from './jobs/pollCircleWithdraw';
 import { retryFailedIntegrations } from './jobs/retryFailedIntegrations';
 import { provisionGithubRepo } from './jobs/provisionGithubRepo';
+import { recoverOrphanedPayouts } from './jobs/recoverOrphanedPayouts';
 
 async function main() {
   const queue = await createWorkerQueue();
@@ -34,8 +35,13 @@ async function main() {
     await retryFailedIntegrations(job.data as Record<string, unknown>);
   });
 
+  await queue.work(QUEUE_NAMES.recoverOrphanedPayouts, async () => {
+    await recoverOrphanedPayouts();
+  });
+
   await queue.schedule(QUEUE_NAMES.syncEscrowEvents, '*/2 * * * *', { trigger: 'cron' });
   await queue.schedule(QUEUE_NAMES.reconcileBountyState, '*/15 * * * *', { trigger: 'cron' });
+  await queue.schedule(QUEUE_NAMES.recoverOrphanedPayouts, '*/5 * * * *', { trigger: 'cron' });
 
   console.info('BountyView worker started');
 }

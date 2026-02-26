@@ -34,7 +34,7 @@
     Submission must reference the assigned BountyView repository and your designated candidate branch.
   </p>
 
-  <form class="grid" style="gap: 1rem;" on:submit={submitSolution}>
+  <form class="grid" style="gap: 1rem;" onsubmit={submitSolution}>
     <label>
       Repository URL
       <input type="url" name="githubRepoUrl" required placeholder="https://github.com/org/repo" />

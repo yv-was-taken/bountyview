@@ -1,7 +1,7 @@
 <script lang="ts">
   const { data } = $props();
 
-  const bounty = data.bounty;
+  const bounty = $derived(data.bounty);
 
   async function claimBounty() {
     const res = await fetch(`/api/bounties/${bounty.id}/claim`, { method: 'POST' });
@@ -43,7 +43,7 @@
   </article>
 
   <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-    <button on:click={claimBounty}>Claim Bounty</button>
+    <button onclick={claimBounty}>Claim Bounty</button>
     <a href={`/bounties/${bounty.id}/submit`} class="card" style="text-decoration: none;">Submit Solution</a>
   </div>
 </section>

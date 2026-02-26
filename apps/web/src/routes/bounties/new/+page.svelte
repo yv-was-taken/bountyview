@@ -1,7 +1,7 @@
 <script lang="ts">
   const { data } = $props();
 
-  let feedback = '';
+  let feedback = $state('');
 
   async function createBounty(event: SubmitEvent) {
     event.preventDefault();
@@ -65,7 +65,7 @@
     Every bounty is part of a hiring process. Be explicit about deliverables and what happens after.
   </p>
 
-  <form class="grid" style="gap: 0.9rem;" on:submit={createBounty}>
+  <form class="grid" style="gap: 0.9rem;" onsubmit={createBounty}>
     <div class="grid grid-2">
       <label>Job Title<input name="jobTitle" required /></label>
       <label>Role Level

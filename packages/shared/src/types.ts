@@ -46,7 +46,8 @@ export const QUEUE_NAMES = {
   githubRepoProvision: 'github_repo_provision',
   githubAccessRevoke: 'github_access_revoke',
   circleWithdrawStatusPoll: 'circle_withdraw_status_poll',
-  retryFailedIntegrations: 'retry_failed_integrations'
+  retryFailedIntegrations: 'retry_failed_integrations',
+  recoverOrphanedPayouts: 'recover_orphaned_payouts'
 } as const;
 
 export type QueueName = (typeof QUEUE_NAMES)[keyof typeof QUEUE_NAMES];

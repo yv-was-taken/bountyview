@@ -1,5 +1,11 @@
-import { redirect, type Handle } from '@sveltejs/kit';
+import { json, redirect, type Handle } from '@sveltejs/kit';
+import { sequence } from '@sveltejs/kit/hooks';
 import { handle as authHandle } from './auth';
+import { checkRateLimit, RATE_LIMITS } from '$lib/server/rate-limit';
+
+// ---------------------------------------------------------------------------
+// Route classification helpers
+// ---------------------------------------------------------------------------
 
 const employerOnlyPrefixes = ['/bounties/new', '/templates'];
 
@@ -43,7 +49,58 @@ function isTermsBypassPath(pathname: string): boolean {
   return false;
 }
 
-export const handle: Handle = async ({ event, resolve }) => {
+// ---------------------------------------------------------------------------
+// Rate-limit bucket classification
+// ---------------------------------------------------------------------------
+
+function getRateLimitBucket(pathname: string): { bucket: string; config: (typeof RATE_LIMITS)[keyof typeof RATE_LIMITS] } | null {
+  if (pathname.startsWith('/auth')) {
+    return { bucket: 'auth', config: RATE_LIMITS.auth };
+  }
+
+  if (pathname.startsWith('/api/session')) {
+    return { bucket: 'auth', config: RATE_LIMITS.auth };
+  }
+
+  if (pathname.startsWith('/api/webhooks')) {
+    return { bucket: 'webhooks', config: RATE_LIMITS.api };
+  }
+
+  return null;
+}
+
+// ---------------------------------------------------------------------------
+// Hook 1: Rate limiting — runs before auth to reject early
+// ---------------------------------------------------------------------------
+
+const handleRateLimit: Handle = async ({ event, resolve }) => {
+  const limit = getRateLimitBucket(event.url.pathname);
+
+  if (limit) {
+    const ip = event.getClientAddress();
+    const result = checkRateLimit(ip, limit.bucket, limit.config);
+
+    if (!result.allowed) {
+      return json(
+        { error: 'Too many requests. Please try again later.' },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(result.retryAfterSeconds)
+          }
+        }
+      );
+    }
+  }
+
+  return resolve(event);
+};
+
+// ---------------------------------------------------------------------------
+// Hook 2: Auth + route guards (existing logic, unchanged)
+// ---------------------------------------------------------------------------
+
+const handleAuth: Handle = async ({ event, resolve }) => {
   return authHandle({
     event,
     resolve: async (authEvent) => {
@@ -81,3 +138,37 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
   });
 };
+
+// ---------------------------------------------------------------------------
+// Hook 3: Security response headers
+// ---------------------------------------------------------------------------
+
+const handleSecurityHeaders: Handle = async ({ event, resolve }) => {
+  const response = await resolve(event);
+
+  const csp = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https:",
+    "font-src 'self' data:",
+    "connect-src 'self' https:",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'"
+  ].join('; ');
+
+  response.headers.set('Content-Security-Policy', csp);
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+  return response;
+};
+
+// ---------------------------------------------------------------------------
+// Compose all hooks in order
+// ---------------------------------------------------------------------------
+
+export const handle = sequence(handleRateLimit, handleAuth, handleSecurityHeaders);

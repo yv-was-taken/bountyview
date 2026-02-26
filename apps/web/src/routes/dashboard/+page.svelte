@@ -100,7 +100,7 @@
   <section class="grid" style="gap: 1rem;">
     <h1>Employer Dashboard</h1>
     <div style="display: flex; gap: 0.5rem;">
-      <button class="secondary" on:click={() => setRole('candidate')}>Switch to Candidate</button>
+      <button class="secondary" onclick={() => setRole('candidate')}>Switch to Candidate</button>
     </div>
 
     <article class="card">
@@ -114,8 +114,8 @@
               <a href={`/bounties/${bounty.id}`}>{bounty.jobTitle}</a>
               ({bounty.status})
               - <a href={`/bounties/${bounty.id}/submissions`}>Review submissions</a>
-              <button class="secondary" on:click={() => markFunded(bounty.id)}>Link Funding</button>
-              <button class="secondary" on:click={() => cancelBounty(bounty)}>Cancel</button>
+              <button class="secondary" onclick={() => markFunded(bounty.id)}>Link Funding</button>
+              <button class="secondary" onclick={() => cancelBounty(bounty)}>Cancel</button>
             </li>
           {/each}
         </ul>
@@ -124,7 +124,7 @@
 
     <article class="card">
       <h2>Block Candidate</h2>
-      <form class="grid" style="gap: 0.75rem;" on:submit={blockCandidate}>
+      <form class="grid" style="gap: 0.75rem;" onsubmit={blockCandidate}>
         <label>Candidate ID <input name="candidateId" required /></label>
         <label>Reason <textarea name="reason" rows="3" required></textarea></label>
         <button type="submit">Block</button>
@@ -138,7 +138,7 @@
           {#each data.blockedCandidates ?? [] as block}
             <li>
               {block.githubUsername} ({block.candidateId}) - {block.reason}
-              <button class="secondary" on:click={() => unblockCandidate(block.candidateId)}>Unblock</button>
+              <button class="secondary" onclick={() => unblockCandidate(block.candidateId)}>Unblock</button>
             </li>
           {/each}
         </ul>
@@ -149,7 +149,7 @@
   <section class="grid" style="gap: 1rem;">
     <h1>Candidate Dashboard</h1>
     <div style="display: flex; gap: 0.5rem;">
-      <button class="secondary" on:click={() => setRole('employer')}>Switch to Employer</button>
+      <button class="secondary" onclick={() => setRole('employer')}>Switch to Employer</button>
     </div>
 
     <article class="card">

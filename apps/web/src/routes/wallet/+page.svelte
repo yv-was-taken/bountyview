@@ -28,7 +28,7 @@
     <h1>Wallet</h1>
     <p style="color: var(--muted);">Withdraw winnings to bank (Circle) or self-transfer USDC.</p>
 
-    <form class="grid grid-3" on:submit={withdrawToBank}>
+    <form class="grid grid-3" onsubmit={withdrawToBank}>
       <label>Amount (USDC)
         <input name="amountUsdc" type="number" min="1" step="0.01" required />
       </label>
