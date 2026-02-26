@@ -1,5 +1,10 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { Button, Card, Input, Textarea, toast } from '$lib/components';
+
   const { data } = $props();
+
+  let loading = $state(false);
 
   async function submitSolution(event: SubmitEvent) {
     event.preventDefault();
@@ -16,37 +21,63 @@
         .map((line) => ({ label: line }))
     };
 
-    const res = await fetch(`/api/bounties/${data.bounty.id}/submit`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+    loading = true;
+    try {
+      const res = await fetch(`/api/bounties/${data.bounty.id}/submit`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
 
-    const body = await res.json();
-    alert(res.ok ? 'Submission recorded successfully.' : body.error ?? 'Failed to submit');
+      const body = await res.json();
+
+      if (res.ok) {
+        toast.success('Submission recorded successfully.');
+        goto(`/bounties/${data.bounty.id}`);
+      } else {
+        toast.error(body.error ?? 'Failed to submit');
+      }
+    } catch {
+      toast.error('Network error — please try again');
+    } finally {
+      loading = false;
+    }
   }
 </script>
 
-<section class="card">
-  <h1>Submit Solution</h1>
-  <p><strong>{data.bounty.jobTitle}</strong> · {data.bounty.companyName}</p>
-  <p style="color: var(--muted);">
+<h1 class="font-mono text-2xl font-bold mb-6">{data.bounty.jobTitle}</h1>
+
+<Card>
+  <p class="font-mono text-xs text-muted mb-6">
     Submission must reference the assigned BountyView repository and your designated candidate branch.
   </p>
 
-  <form class="grid" style="gap: 1rem;" onsubmit={submitSolution}>
-    <label>
-      Repository URL
-      <input type="url" name="githubRepoUrl" required placeholder="https://github.com/org/repo" />
-    </label>
-    <label>
-      Pull Request URL
-      <input type="url" name="githubPrUrl" required placeholder="https://github.com/org/repo/pull/123" />
-    </label>
-    <label>
-      Custom deliverables (one line each)
-      <textarea name="customDeliverables" rows="5" placeholder="Loom walkthrough\nDesign notes"></textarea>
-    </label>
-    <button type="submit">Submit Bounty</button>
+  <form class="flex flex-col gap-4" onsubmit={submitSolution}>
+    <Input
+      label="Repository URL"
+      type="url"
+      name="githubRepoUrl"
+      required
+      placeholder="https://github.com/org/repo"
+    />
+
+    <Input
+      label="Pull Request URL"
+      type="url"
+      name="githubPrUrl"
+      required
+      placeholder="https://github.com/org/repo/pull/123"
+    />
+
+    <Textarea
+      label="Custom Deliverables (one per line)"
+      name="customDeliverables"
+      rows={5}
+      placeholder="Loom walkthrough&#10;Design notes"
+    />
+
+    <div class="pt-2">
+      <Button type="submit" {loading}>Submit Solution</Button>
+    </div>
   </form>
-</section>
+</Card>
