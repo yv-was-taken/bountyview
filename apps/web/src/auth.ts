@@ -83,7 +83,6 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
       session.user.githubId = typeof token.githubId === 'string' ? token.githubId : '';
       session.user.githubUsername = typeof token.githubUsername === 'string' ? token.githubUsername : '';
       session.user.companyId = typeof token.companyId === 'string' ? token.companyId : null;
-      session.user.email = typeof token.email === 'string' ? token.email : null;
       session.user.termsAcceptedAt = typeof token.termsAcceptedAt === 'string' ? token.termsAcceptedAt : null;
 
       if (!session.user.id || !session.user.githubId) {
@@ -100,7 +99,6 @@ export const { handle, signIn, signOut } = SvelteKitAuth({
           session.user.githubId = fallback.githubId;
           session.user.githubUsername = fallback.githubUsername;
           session.user.companyId = fallback.companyId;
-          session.user.email = fallback.email;
           session.user.termsAcceptedAt = fallback.termsAcceptedAt?.toISOString() ?? null;
         }
       }

@@ -17,3 +17,15 @@ export interface CirclePollPayload {
   payoutId: string;
   externalRef: string;
 }
+
+export interface SendEmailPayload {
+  to: string;
+  template:
+    | 'bounty_claimed'
+    | 'submission_received'
+    | 'winner_selected'
+    | 'bounty_cancelled'
+    | 'payout_completed'
+    | 'payout_failed';
+  data: Record<string, string>;
+}
