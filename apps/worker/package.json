@@ -10,6 +10,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.999.0",
     "@bountyview/db": "0.1.0",
     "@bountyview/shared": "0.1.0",
     "@octokit/app": "^16.0.0",
