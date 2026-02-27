@@ -7,6 +7,8 @@ import { pollCircleWithdraw } from './jobs/pollCircleWithdraw';
 import { retryFailedIntegrations } from './jobs/retryFailedIntegrations';
 import { provisionGithubRepo } from './jobs/provisionGithubRepo';
 import { recoverOrphanedPayouts } from './jobs/recoverOrphanedPayouts';
+import { handleSendEmail } from './jobs/sendEmail';
+import type { SendEmailPayload } from './jobs/types';
 
 async function main() {
   const queue = await createWorkerQueue();
@@ -37,6 +39,10 @@ async function main() {
 
   await queue.work(QUEUE_NAMES.recoverOrphanedPayouts, async () => {
     await recoverOrphanedPayouts();
+  });
+
+  await queue.work(QUEUE_NAMES.sendEmail, async (job) => {
+    await handleSendEmail(job.data as SendEmailPayload);
   });
 
   await queue.schedule(QUEUE_NAMES.syncEscrowEvents, '*/2 * * * *', { trigger: 'cron' });
