@@ -4,6 +4,7 @@ import { bounties, db, githubAccessGrants, submissions, users } from '@bountyvie
 import { requireRole } from '$lib/server/auth-guard';
 import { badRequest, conflict, notFound, serverError } from '$lib/server/http';
 import { enqueue } from '$lib/server/queue';
+import { QUEUE_NAMES } from '@bountyview/shared';
 import { writeAuditLog } from '$lib/server/audit';
 import { z } from 'zod';
 import { readJson } from '$lib/server/request';
@@ -153,6 +154,21 @@ export async function POST(event) {
       txHash: parsed.data?.txHash ?? null,
       rejectedSubmissionCount: parsed.data?.rejections?.length ?? 0
     });
+
+    try {
+      for (const grant of grants) {
+        const candidate = await db.query.users.findFirst({ where: eq(users.id, grant.candidateId) });
+        if (candidate?.email) {
+          await enqueue(QUEUE_NAMES.sendEmail, {
+            to: candidate.email,
+            template: 'bounty_cancelled',
+            data: { title: bounty.jobTitle }
+          });
+        }
+      }
+    } catch (e) {
+      console.error('[notify] Failed to enqueue cancel emails:', e);
+    }
 
     return json({ ok: true });
   } catch (err) {

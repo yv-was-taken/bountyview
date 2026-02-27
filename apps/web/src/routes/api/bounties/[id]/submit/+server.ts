@@ -1,12 +1,14 @@
 import { and, eq } from 'drizzle-orm';
 import { json } from '@sveltejs/kit';
-import { db, employerBlocks, githubAccessGrants, githubRepos, submissions } from '@bountyview/db';
+import { bounties, db, employerBlocks, githubAccessGrants, githubRepos, submissions, users } from '@bountyview/db';
 import { submitBountyInputSchema } from '@bountyview/shared';
 import { requireRole } from '$lib/server/auth-guard';
 import { badRequest, conflict, forbidden, notFound, serverError } from '$lib/server/http';
 import { readJson } from '$lib/server/request';
 import { getPullRequestArtifacts } from '$lib/server/services/github';
 import { writeAuditLog } from '$lib/server/audit';
+import { enqueue } from '$lib/server/queue';
+import { QUEUE_NAMES } from '@bountyview/shared';
 import { sql } from 'drizzle-orm';
 
 function parseRepoFullNameFromUrl(url: string): string | null {
@@ -186,6 +188,22 @@ export async function POST(event) {
       bountyId: inserted.bountyId,
       candidateId: candidate.id
     });
+
+    try {
+      const bounty = await db.query.bounties.findFirst({ where: eq(bounties.id, inserted.bountyId) });
+      if (bounty) {
+        const employer = await db.query.users.findFirst({ where: eq(users.id, bounty.employerId) });
+        if (employer?.email) {
+          await enqueue(QUEUE_NAMES.sendEmail, {
+            to: employer.email,
+            template: 'submission_received',
+            data: { candidate: candidate.githubUsername, title: bounty.jobTitle, dashboardUrl: '/dashboard' }
+          });
+        }
+      }
+    } catch (e) {
+      console.error('[notify] Failed to enqueue submission email:', e);
+    }
 
     return json({ ok: true, submissionId }, { status: 201 });
   } catch (err) {

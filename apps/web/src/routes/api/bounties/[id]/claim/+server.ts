@@ -5,6 +5,8 @@ import { requireRole } from '$lib/server/auth-guard';
 import { conflict, forbidden, notFound, serverError } from '$lib/server/http';
 import { ensureBountyRepo, grantCandidateRepoAccess } from '$lib/server/services/github';
 import { isCandidateBlocked } from '@bountyview/db';
+import { enqueue } from '$lib/server/queue';
+import { QUEUE_NAMES } from '@bountyview/shared';
 
 export async function POST(event) {
   const candidate = await requireRole(event, 'candidate');
@@ -58,6 +60,18 @@ export async function POST(event) {
       candidateId: candidate.id,
       candidateGithubUsername: candidateUser.githubUsername
     });
+
+    try {
+      if (employer.email) {
+        await enqueue(QUEUE_NAMES.sendEmail, {
+          to: employer.email,
+          template: 'bounty_claimed',
+          data: { candidate: candidateUser.githubUsername, title: bounty.jobTitle }
+        });
+      }
+    } catch (e) {
+      console.error('[notify] Failed to enqueue claim email:', e);
+    }
 
     return json({
       ok: true,

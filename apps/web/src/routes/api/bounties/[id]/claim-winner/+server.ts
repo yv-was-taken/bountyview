@@ -6,6 +6,8 @@ import { requireRole } from '$lib/server/auth-guard';
 import { badRequest, conflict, notFound, serverError } from '$lib/server/http';
 import { writeAuditLog } from '$lib/server/audit';
 import { readJson } from '$lib/server/request';
+import { enqueue } from '$lib/server/queue';
+import { QUEUE_NAMES } from '@bountyview/shared';
 import { verifyClaimTransaction } from '$lib/server/services/escrow';
 
 function getClaimVerificationErrorMessage(err: unknown): string | null {
@@ -170,6 +172,18 @@ export async function POST(event) {
       employerId: employer.id,
       txHash: parsed.data.txHash
     });
+
+    try {
+      if (winner.email) {
+        await enqueue(QUEUE_NAMES.sendEmail, {
+          to: winner.email,
+          template: 'winner_selected',
+          data: { title: bounty.jobTitle, amount: String(bounty.bountyAmountUsdc) }
+        });
+      }
+    } catch (e) {
+      console.error('[notify] Failed to enqueue winner email:', e);
+    }
 
     return json({ ok: true, submissionId: winningSubmission.id });
   } catch (err) {

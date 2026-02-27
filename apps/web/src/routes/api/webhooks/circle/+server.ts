@@ -1,7 +1,9 @@
 import { eq } from 'drizzle-orm';
 import { json } from '@sveltejs/kit';
-import { db, payouts } from '@bountyview/db';
+import { db, payouts, users } from '@bountyview/db';
 import { verifyCircleWebhookSignature } from '$lib/server/services/circle';
+import { enqueue } from '$lib/server/queue';
+import { QUEUE_NAMES } from '@bountyview/shared';
 
 function normalizeStatus(status: string): 'pending' | 'processing' | 'completed' | 'failed' | 'cancelled' {
   const mapped = status.toLowerCase();
@@ -39,10 +41,12 @@ export async function POST(event) {
     return json({ ok: true });
   }
 
+  const normalizedStatus = normalizeStatus(status);
+
   await db
     .update(payouts)
     .set({
-      status: normalizeStatus(status),
+      status: normalizedStatus,
       updatedAt: new Date(),
       metadata: {
         ...(typeof payload === 'object' ? payload : {}),
@@ -50,6 +54,25 @@ export async function POST(event) {
       }
     })
     .where(eq(payouts.externalRef, transferId));
+
+  if (normalizedStatus === 'completed' || normalizedStatus === 'failed') {
+    try {
+      const payout = await db.query.payouts.findFirst({ where: eq(payouts.externalRef, transferId) });
+      if (payout) {
+        const candidate = await db.query.users.findFirst({ where: eq(users.id, payout.candidateId) });
+        if (candidate?.email) {
+          const template = normalizedStatus === 'completed' ? 'payout_completed' : 'payout_failed';
+          await enqueue(QUEUE_NAMES.sendEmail, {
+            to: candidate.email,
+            template,
+            data: { amount: String(payout.amountUsdc), walletUrl: '/wallet' }
+          });
+        }
+      }
+    } catch (e) {
+      console.error('[notify] Failed to enqueue payout email:', e);
+    }
+  }
 
   return json({ ok: true });
 }
