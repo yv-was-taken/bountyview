@@ -60,7 +60,7 @@ export async function POST(event) {
       const payout = await db.query.payouts.findFirst({ where: eq(payouts.externalRef, transferId) });
       if (payout) {
         const candidate = await db.query.users.findFirst({ where: eq(users.id, payout.candidateId) });
-        if (candidate?.email) {
+        if (candidate?.email && candidate.emailNotifications) {
           const template = normalizedStatus === 'completed' ? 'payout_completed' : 'payout_failed';
           await enqueue(QUEUE_NAMES.sendEmail, {
             to: candidate.email,

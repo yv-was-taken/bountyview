@@ -193,7 +193,7 @@ export async function POST(event) {
       const bounty = await db.query.bounties.findFirst({ where: eq(bounties.id, inserted.bountyId) });
       if (bounty) {
         const employer = await db.query.users.findFirst({ where: eq(users.id, bounty.employerId) });
-        if (employer?.email) {
+        if (employer?.email && employer.emailNotifications) {
           await enqueue(QUEUE_NAMES.sendEmail, {
             to: employer.email,
             template: 'submission_received',

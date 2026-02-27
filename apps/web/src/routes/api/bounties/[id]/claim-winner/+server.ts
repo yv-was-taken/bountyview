@@ -174,7 +174,7 @@ export async function POST(event) {
     });
 
     try {
-      if (winner.email) {
+      if (winner.email && winner.emailNotifications) {
         await enqueue(QUEUE_NAMES.sendEmail, {
           to: winner.email,
           template: 'winner_selected',

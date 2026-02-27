@@ -62,7 +62,7 @@ export async function POST(event) {
     });
 
     try {
-      if (employer.email) {
+      if (employer.email && employer.emailNotifications) {
         await enqueue(QUEUE_NAMES.sendEmail, {
           to: employer.email,
           template: 'bounty_claimed',

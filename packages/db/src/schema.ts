@@ -31,6 +31,7 @@ export const users = pgTable(
     githubUsername: text('github_username').notNull(),
     avatarUrl: text('avatar_url'),
     email: text('email'),
+    emailNotifications: boolean('email_notifications').default(true).notNull(),
     role: text('role').notNull(),
     companyId: uuid('company_id').references(() => companies.id, { onDelete: 'set null' }),
     privyWalletAddress: varchar('privy_wallet_address', { length: 42 }),

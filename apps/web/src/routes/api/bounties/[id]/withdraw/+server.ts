@@ -158,7 +158,7 @@ export async function POST(event) {
     try {
       for (const grant of grants) {
         const candidate = await db.query.users.findFirst({ where: eq(users.id, grant.candidateId) });
-        if (candidate?.email) {
+        if (candidate?.email && candidate.emailNotifications) {
           await enqueue(QUEUE_NAMES.sendEmail, {
             to: candidate.email,
             template: 'bounty_cancelled',
