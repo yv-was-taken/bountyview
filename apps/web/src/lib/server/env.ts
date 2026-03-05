@@ -1,3 +1,4 @@
+import { building } from '$app/environment';
 import { z } from 'zod';
 
 const envSchema = z.object({
@@ -29,6 +30,7 @@ export type AppEnv = z.infer<typeof envSchema>;
 let memoizedEnv: AppEnv | null = null;
 
 export function getEnv(): AppEnv {
+  if (building) return {} as AppEnv;
   if (memoizedEnv) {
     return memoizedEnv;
   }
