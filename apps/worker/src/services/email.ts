@@ -1,7 +1,7 @@
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 
 const ses = new SESClient({ region: process.env.AWS_REGION || 'us-east-1' });
-const FROM_EMAIL = process.env.AWS_SES_FROM_EMAIL || 'noreply@bountyview.com';
+const FROM_EMAIL = process.env.AWS_SES_FROM_EMAIL || 'noreply@bountyview.dev';
 
 interface EmailContent {
   subject: string;
