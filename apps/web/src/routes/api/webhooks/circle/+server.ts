@@ -17,15 +17,11 @@ function normalizeStatus(status: string): 'pending' | 'processing' | 'completed'
 export async function POST(event) {
   const rawBody = await event.request.text();
 
-  // Handle SNS subscription confirmation from Circle's notification system.
-  // When activating a webhook subscription, Circle (via AWS SNS) sends a
-  // SubscriptionConfirmation POST that we must acknowledge by visiting the
-  // SubscribeURL. This request does not carry a Circle HMAC signature.
-  const messageType =
-    event.request.headers.get('x-amz-sns-message-type') ??
-    event.request.headers.get('X-Amz-Sns-Message-Type');
+  // Circle's v2 notification system uses AWS SNS. Handle SNS message types
+  // before HMAC verification since SNS requests don't carry our signature.
+  const snsMessageType = event.request.headers.get('x-amz-sns-message-type');
 
-  if (messageType === 'SubscriptionConfirmation') {
+  if (snsMessageType === 'SubscriptionConfirmation') {
     try {
       const snsPayload = JSON.parse(rawBody);
       if (snsPayload.SubscribeURL) {
@@ -37,11 +33,15 @@ export async function POST(event) {
     return json({ ok: true });
   }
 
-  const signature =
-    event.request.headers.get('x-circle-signature') ?? event.request.headers.get('circle-signature');
+  // SNS Notification messages wrap the actual Circle payload in a Message field.
+  // For regular Circle webhook calls (non-SNS), verify HMAC signature.
+  if (!snsMessageType) {
+    const signature =
+      event.request.headers.get('x-circle-signature') ?? event.request.headers.get('circle-signature');
 
-  if (!verifyCircleWebhookSignature(signature, rawBody)) {
-    return json({ error: 'Invalid signature' }, { status: 401 });
+    if (!verifyCircleWebhookSignature(signature, rawBody)) {
+      return json({ error: 'Invalid signature' }, { status: 401 });
+    }
   }
 
   let payload: {
@@ -50,7 +50,13 @@ export async function POST(event) {
   };
 
   try {
-    payload = JSON.parse(rawBody);
+    const parsed = JSON.parse(rawBody);
+    // SNS Notification wraps the actual payload in a Message string field
+    if (snsMessageType === 'Notification' && typeof parsed.Message === 'string') {
+      payload = JSON.parse(parsed.Message);
+    } else {
+      payload = parsed;
+    }
   } catch {
     return json({ error: 'Invalid JSON' }, { status: 400 });
   }
