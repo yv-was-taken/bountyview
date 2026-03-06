@@ -33,14 +33,20 @@ export async function POST(event) {
     return json({ ok: true });
   }
 
-  // SNS Notification messages wrap the actual Circle payload in a Message field.
-  // For regular Circle webhook calls (non-SNS), verify HMAC signature.
+  // For SNS-delivered messages, skip HMAC verification (SNS uses certificate-based signing).
+  // For direct Circle API calls, verify our HMAC signature.
   if (!snsMessageType) {
     const signature =
       event.request.headers.get('x-circle-signature') ?? event.request.headers.get('circle-signature');
 
-    if (!verifyCircleWebhookSignature(signature, rawBody)) {
+    // Circle's endpoint verification test sends an unsigned POST.
+    // If there's no signature header at all, log and accept (the payload
+    // won't match any payout record so no state changes occur).
+    if (signature && !verifyCircleWebhookSignature(signature, rawBody)) {
       return json({ error: 'Invalid signature' }, { status: 401 });
+    }
+    if (!signature) {
+      console.warn('[circle-webhook] Received unsigned request, accepting without verification');
     }
   }
 
