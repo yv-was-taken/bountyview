@@ -15,9 +15,30 @@ function normalizeStatus(status: string): 'pending' | 'processing' | 'completed'
 }
 
 export async function POST(event) {
+  const rawBody = await event.request.text();
+
+  // Handle SNS subscription confirmation from Circle's notification system.
+  // When activating a webhook subscription, Circle (via AWS SNS) sends a
+  // SubscriptionConfirmation POST that we must acknowledge by visiting the
+  // SubscribeURL. This request does not carry a Circle HMAC signature.
+  const messageType =
+    event.request.headers.get('x-amz-sns-message-type') ??
+    event.request.headers.get('X-Amz-Sns-Message-Type');
+
+  if (messageType === 'SubscriptionConfirmation') {
+    try {
+      const snsPayload = JSON.parse(rawBody);
+      if (snsPayload.SubscribeURL) {
+        await fetch(snsPayload.SubscribeURL);
+      }
+    } catch (e) {
+      console.error('[circle-webhook] Failed to confirm SNS subscription:', e);
+    }
+    return json({ ok: true });
+  }
+
   const signature =
     event.request.headers.get('x-circle-signature') ?? event.request.headers.get('circle-signature');
-  const rawBody = await event.request.text();
 
   if (!verifyCircleWebhookSignature(signature, rawBody)) {
     return json({ error: 'Invalid signature' }, { status: 401 });
