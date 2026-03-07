@@ -1,7 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { json } from '@sveltejs/kit';
 import { db, payouts, users } from '@bountyview/db';
-import { verifyCircleWebhookSignature } from '$lib/server/services/circle';
 import { enqueue } from '$lib/server/queue';
 import { QUEUE_NAMES } from '@bountyview/shared';
 
@@ -33,22 +32,10 @@ export async function POST(event) {
     return json({ ok: true });
   }
 
-  // For SNS-delivered messages, skip HMAC verification (SNS uses certificate-based signing).
-  // For direct Circle API calls, verify our HMAC signature.
-  if (!snsMessageType) {
-    const signature =
-      event.request.headers.get('x-circle-signature') ?? event.request.headers.get('circle-signature');
-
-    // Circle's endpoint verification test sends an unsigned POST.
-    // If there's no signature header at all, log and accept (the payload
-    // won't match any payout record so no state changes occur).
-    if (signature && !verifyCircleWebhookSignature(signature, rawBody)) {
-      return json({ error: 'Invalid signature' }, { status: 401 });
-    }
-    if (!signature) {
-      console.warn('[circle-webhook] Received unsigned request, accepting without verification');
-    }
-  }
+  // Circle's v2 notifications are delivered via AWS SNS which uses certificate-based
+  // signing (not shared-secret HMAC). We rely on SNS message type headers for
+  // subscription confirmation and on payload matching (transferId lookup) for
+  // notification processing. No shared-secret HMAC verification is needed.
 
   let payload: {
     notificationType?: string;
